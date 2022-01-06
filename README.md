@@ -1,2 +1,2 @@
-# bookstore_users-api
+# grocerystore_users-api
 Learn from udemy class practice
