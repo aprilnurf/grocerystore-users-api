@@ -3,7 +3,7 @@ package users
 import (
 	"github.com/aprilnurf/grocerystore_users-api/domain/users"
 	"github.com/aprilnurf/grocerystore_users-api/services"
-	"github.com/aprilnurf/grocerystore_users-api/utils/errors"
+	"github.com/aprilnurf/grocerystore_users-api/utils/errors_utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -12,7 +12,7 @@ import (
 func GetUser(ctx *gin.Context) {
 	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
 	if userErr != nil {
-		err := errors.NewBadRequestError("user_id should be a number")
+		err := errors_utils.NewBadRequestError("user_id should be a number")
 		ctx.JSON(err.Status, err)
 		return
 	}
@@ -41,7 +41,7 @@ func CreateUser(ctx *gin.Context) {
 	//OR you can use ShouldBindJSON
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		//return bad request
-		restError := errors.NewBadRequestError("invalid Json")
+		restError := errors_utils.NewBadRequestError("invalid Json")
 		ctx.JSON(restError.Status, restError)
 		return
 	}
@@ -56,3 +56,30 @@ func CreateUser(ctx *gin.Context) {
 //func SearchUser(ctx *gin.Context) {
 //	ctx.String(http.StatusNotImplemented, "Implement me!")
 //}
+
+func UpdateUser(ctx *gin.Context) {
+	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+	if userErr != nil {
+		err := errors_utils.NewBadRequestError("user_id should be a number")
+		ctx.JSON(err.Status, err)
+		return
+	}
+
+	var user users.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		//return bad request
+		restError := errors_utils.NewBadRequestError("invalid Json")
+		ctx.JSON(restError.Status, restError)
+		return
+	}
+
+	user.Id = userId
+
+	isPartial := ctx.Request.Method == http.MethodPatch
+	result, err := services.UpdateUser(isPartial, user)
+	if err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusCreated, result)
+}
