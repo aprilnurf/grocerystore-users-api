@@ -1,2 +1,2 @@
 # grocerystore-users-api
-Go, MySQL, OAuth, Gin
+Go, MySQL, Gin
