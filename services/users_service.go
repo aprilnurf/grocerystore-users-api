@@ -7,7 +7,22 @@ import (
 	"github.com/aprilnurf/grocerystore_users-api/utils/errors_utils"
 )
 
-func CreateUser(user users.User) (*users.User, *errors_utils.RestError) {
+var (
+	UserService userServiceInterface = &userService{}
+)
+
+type userService struct {
+}
+
+type userServiceInterface interface {
+	GetUser(int64) (*users.User, *errors_utils.RestError)
+	CreateUser(users.User) (*users.User, *errors_utils.RestError)
+	UpdateUser(bool, users.User) (*users.User, *errors_utils.RestError)
+	SearchUser(bool) ([]users.User, *errors_utils.RestError)
+	DeleteUser(int64) *errors_utils.RestError
+}
+
+func (s *userService) CreateUser(user users.User) (*users.User, *errors_utils.RestError) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -20,7 +35,7 @@ func CreateUser(user users.User) (*users.User, *errors_utils.RestError) {
 	return &user, nil
 }
 
-func GetUser(userId int64) (*users.User, *errors_utils.RestError) {
+func (s *userService) GetUser(userId int64) (*users.User, *errors_utils.RestError) {
 	if userId <= 0 {
 		return nil, errors_utils.NewBadRequestError("userId invalid")
 	}
@@ -31,12 +46,16 @@ func GetUser(userId int64) (*users.User, *errors_utils.RestError) {
 	return result, nil
 }
 
-func UpdateUser(isPartial bool, user users.User) (*users.User, *errors_utils.RestError) {
-	current, err := GetUser(user.Id)
-	if err != nil {
-		return nil, err
-	}
-	if err := user.Validate(); err != nil {
+func (s *userService) UpdateUser(isPartial bool, user users.User) (*users.User, *errors_utils.RestError) {
+	//current, err := GetUser(user.Id)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if err := user.Validate(); err != nil {
+	//	return nil, err
+	//}
+	current := &users.User{Id: user.Id}
+	if err := current.Get(); err != nil {
 		return nil, err
 	}
 	if isPartial {
@@ -61,12 +80,12 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *errors_utils.Res
 	return current, nil
 }
 
-func Search(status bool) ([]users.User, *errors_utils.RestError) {
+func (s *userService) SearchUser(status bool) ([]users.User, *errors_utils.RestError) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
 
-func DeleteUser(userId int64) *errors_utils.RestError {
+func (s *userService) DeleteUser(userId int64) *errors_utils.RestError {
 	user := &users.User{Id: userId}
 	return user.Delete()
 }
