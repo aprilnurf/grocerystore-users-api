@@ -9,11 +9,18 @@ import (
 	"strconv"
 )
 
-func GetUser(ctx *gin.Context) {
-	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+func getUserId(UserIdParam string) (int64, *errors_utils.RestError) {
+	userId, userErr := strconv.ParseInt(UserIdParam, 10, 64)
 	if userErr != nil {
-		err := errors_utils.NewBadRequestError("user_id should be a number")
-		ctx.JSON(err.Status, err)
+		return 0, errors_utils.NewBadRequestError("user_id should be a number")
+	}
+	return userId, nil
+}
+
+func GetUser(ctx *gin.Context) {
+	userId, userErr := getUserId(ctx.Param("user_id"))
+	if userErr != nil {
+		ctx.JSON(userErr.Status, userErr)
 		return
 	}
 
@@ -22,7 +29,7 @@ func GetUser(ctx *gin.Context) {
 		ctx.JSON(getErr.Status, getErr)
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+	ctx.JSON(http.StatusOK, user.Marshall(ctx.GetHeader("X-Public") == "true"))
 }
 
 func CreateUser(ctx *gin.Context) {
@@ -50,7 +57,7 @@ func CreateUser(ctx *gin.Context) {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, result)
+	ctx.JSON(http.StatusCreated, result.Marshall(ctx.GetHeader("X-Public") == "true"))
 }
 
 //func SearchUser(ctx *gin.Context) {
@@ -81,5 +88,36 @@ func UpdateUser(ctx *gin.Context) {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, result)
+	ctx.JSON(http.StatusCreated, result.Marshall(ctx.GetHeader("X-Public") == "true"))
+}
+
+func Search(ctx *gin.Context) {
+	status := ctx.Query("status")
+	isActive, err := strconv.ParseBool(status)
+	if err != nil {
+		restError := errors_utils.NewBadRequestError("invalid Json")
+		ctx.JSON(restError.Status, restError)
+		return
+	}
+	users, errSearch := services.Search(isActive)
+
+	if errSearch != nil {
+		ctx.JSON(errSearch.Status, errSearch)
+	}
+	//users.Marshall(ctx.GetHeader("X-Public") == "true")
+	ctx.JSON(http.StatusOK, users)
+}
+
+func Delete(ctx *gin.Context) {
+	userId, userErr := getUserId(ctx.Param("user_id"))
+	if userErr != nil {
+		ctx.JSON(userErr.Status, userErr)
+		return
+	}
+
+	if err := services.DeleteUser(userId); err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, map[string]string{"status": "deleted"})
 }
