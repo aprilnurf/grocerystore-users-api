@@ -13,7 +13,7 @@ func CreateUser(user users.User) (*users.User, *errors_utils.RestError) {
 	}
 
 	user.Password = crypto_utils.GetMd5(user.Password)
-	user.CreatedDate = date_utils.GetNowString()
+	user.CreatedDate = date_utils.GetNowDB()
 	if err := user.Save(); err != nil {
 		return nil, err
 	}

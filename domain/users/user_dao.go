@@ -1,7 +1,6 @@
 package users
 
 import (
-	"fmt"
 	"github.com/aprilnurf/grocerystore_users-api/datasources/mysql"
 	"github.com/aprilnurf/grocerystore_users-api/utils/date_utils"
 	"github.com/aprilnurf/grocerystore_users-api/utils/errors_utils"
@@ -9,11 +8,9 @@ import (
 )
 
 const (
-	indexUniqueEmail      = "email_UNIQUE"
-	errorNoRows           = "no rows in result set"
-	queryInsert           = "INSERT INTO users(first_name, last_name, email, created_date) VALUES (?,?,?,?);"
+	queryInsert           = "INSERT INTO users(first_name, last_name, email, created_date, password, status) VALUES (?,?,?,?,?,?);"
 	queryUpdate           = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
-	queryGetUser          = "SELECT id, first_name, last_name, email, created_date FROM users WHERE id=?;"
+	queryGetUser          = "SELECT id, first_name, last_name, email, created_date, status FROM users WHERE id=?;"
 	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
 	queryFindUserByStatus = "SELECT id, first_name, last_name, email, created_date, status FROM users WHERE status=?;"
 )
@@ -43,7 +40,7 @@ func (user *User) Get() *errors_utils.RestError {
 	defer stmt.Close()
 
 	result := stmt.QueryRow(&user.Id)
-	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.CreatedDate); err != nil {
+	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.CreatedDate, &user.Status); err != nil {
 		return mysql_utils.ParseError(err)
 		//if strings.Contains(err.Error(), errorNoRows) {
 		//	return errors_utils.NewNotExistError(fmt.Sprintf("user %d not found", user.Id))
@@ -62,8 +59,7 @@ func (user *User) Save() *errors_utils.RestError {
 	}
 	defer rows.Close()
 
-	user.CreatedDate = date_utils.GetNowString()
-	result, saveErr := rows.Exec(user.FirstName, user.LastName, user.Email, user.CreatedDate)
+	result, saveErr := rows.Exec(user.FirstName, user.LastName, user.Email, user.CreatedDate, user.Password, user.Status)
 
 	if saveErr != nil {
 		return mysql_utils.ParseError(saveErr)
@@ -145,7 +141,7 @@ func (user *User) FindByStatus(status bool) ([]User, *errors_utils.RestError) {
 	}
 
 	if len(results) == 0 {
-		return nil, errors_utils.NewNotExistError(fmt.Sprintf("no users matching status"))
+		return nil, errors_utils.NewNotExistError("no users matching status")
 	}
 	return results, nil
 }
