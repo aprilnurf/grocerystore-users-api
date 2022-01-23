@@ -24,7 +24,7 @@ func GetUser(ctx *gin.Context) {
 		return
 	}
 
-	user, getErr := services.GetUser(userId)
+	user, getErr := services.UserService.GetUser(userId)
 	if getErr != nil {
 		ctx.JSON(getErr.Status, getErr)
 		return
@@ -52,7 +52,7 @@ func CreateUser(ctx *gin.Context) {
 		ctx.JSON(restError.Status, restError)
 		return
 	}
-	result, err := services.CreateUser(user)
+	result, err := services.UserService.CreateUser(user)
 	if err != nil {
 		ctx.JSON(err.Status, err)
 		return
@@ -83,7 +83,7 @@ func UpdateUser(ctx *gin.Context) {
 	user.Id = userId
 
 	isPartial := ctx.Request.Method == http.MethodPatch
-	result, err := services.UpdateUser(isPartial, user)
+	result, err := services.UserService.UpdateUser(isPartial, user)
 	if err != nil {
 		ctx.JSON(err.Status, err)
 		return
@@ -99,7 +99,7 @@ func Search(ctx *gin.Context) {
 		ctx.JSON(restError.Status, restError)
 		return
 	}
-	users, errSearch := services.Search(isActive)
+	users, errSearch := services.UserService.SearchUser(isActive)
 
 	if errSearch != nil {
 		ctx.JSON(errSearch.Status, errSearch)
@@ -115,7 +115,7 @@ func Delete(ctx *gin.Context) {
 		return
 	}
 
-	if err := services.DeleteUser(userId); err != nil {
+	if err := services.UserService.DeleteUser(userId); err != nil {
 		ctx.JSON(err.Status, err)
 		return
 	}

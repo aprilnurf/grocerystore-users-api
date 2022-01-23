@@ -5,14 +5,18 @@ import (
 	"strings"
 )
 
+const (
+	StatusActive = true
+)
+
 type User struct {
 	Id          int64  `json:"id"`
 	FirstName   string `json:"firstName"`
 	LastName    string `json:"lastName"`
 	Email       string `json:"email"`
 	CreatedDate string `json:"createdDate"`
-	Password    string `json:"-"`
-	Status      bool `json:"status"`
+	Password    string `json:"password"`
+	Status      bool   `json:"status"`
 }
 
 //func Validate(user *User) *errors.RestError {
@@ -29,6 +33,10 @@ func (user *User) Validate() *errors_utils.RestError {
 	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
 	if user.Email == "" {
 		return errors_utils.NewBadRequestError("Invalid Email Address")
+	}
+	user.Password = strings.TrimSpace(user.Password)
+	if user.Password == ""{
+		return errors_utils.NewBadRequestError("Invalid Password")
 	}
 	return nil
 }
